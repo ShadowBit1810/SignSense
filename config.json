@@ -1,0 +1,66 @@
+{
+  "pose_task_path": "mediapipe_tasks/pose_landmarker_lite.task",
+  "hand_task_path": "mediapipe_tasks/hand_landmarker.task",
+  "onnx_model_path": "models/best_model_2f40e2e8c9_motion.onnx",
+  "label_map_path": "models/label_map_2f40e2e8c9_motion.json",
+
+  "fixed_len": 40,
+  "confidence_threshold": 0.65,
+
+  "speech_mode": "words_and_sentences",
+
+  "tts_rate": 165,
+  "camera_index": 0,
+
+  "stability_frames": 5,
+  "same_sign_cooldown_frames": 15,
+  "word_buffer_size": 4,
+  "word_buffer_timeout_seconds": 15,
+
+  "confusable_pairs": [["thankyou", "talk"]],
+  "confusable_margin": 0.15,
+
+  "process_interval_ms": 60,
+  "prefer_webgpu_onnx": true,
+  "prefer_gpu_mediapipe": false,
+
+  "label_overrides": {
+    "talk": "thankyou",
+    "fireman": "hello"
+  },
+
+
+  "_COMMENTS": "================ EXPLANATIONS BELOW (not read as settings, just notes for you) ================",
+
+  "_comment_paths": "pose_task_path / hand_task_path / onnx_model_path / label_map_path -- only change if you move/rename model files. Relative to main.py's folder.",
+
+  "_comment_fixed_len": "fixed_len -- frames per prediction window. Must match model training. Do NOT change unless you retrain.",
+
+  "_comment_confidence_threshold": "confidence_threshold -- min model confidence (0-1) to consider a prediction. Higher = fewer false detections but may miss real signs. Lower = catches more but noisier.",
+
+  "_comment_speech_mode": "speech_mode -- controls what gets spoken. 'words_and_sentences' = speak every sign AND full sentences on match. 'sentence_only' = silent on single signs, only speak on a full template match. 'words_only' = speak every sign, never match sentences.",
+
+  "_comment_tts_rate": "tts_rate -- text-to-speech speaking speed (approx words per minute). Higher = faster/rushed, lower = slower/clearer.",
+
+  "_comment_camera_index": "camera_index -- which camera device to open. 0 = default/first camera. If wrong camera opens, try 1, 2, etc.",
+
+  "_comment_stability_frames": "stability_frames -- consecutive same-prediction frames needed to confirm a sign. Higher = fewer false positives but slower reaction (sign must be held longer). Lower = faster reaction but more misfires.",
+
+  "_comment_same_sign_cooldown_frames": "same_sign_cooldown_frames -- frames to ignore repeats of the SAME sign after it's confirmed, so one held sign isn't re-confirmed repeatedly. Higher = safer against duplicates but may miss genuine fast repeats. Lower = catches repeats faster but risks double-firing on a held sign.",
+
+  "_comment_word_buffer_size": "word_buffer_size -- how many recent confirmed signs are kept for sentence matching. Should be >= your longest template in sentence_templates.py.",
+
+  "_comment_word_buffer_timeout_seconds": "word_buffer_timeout_seconds -- if no new sign is confirmed within this many seconds, the word buffer auto-clears. Prevents a stale half-finished word (e.g. you signed 'look' but never followed up) from sitting around and accidentally completing a sentence much later. Lower = clears faster/stricter, higher = more forgiving of pauses between signs.",
+
+  "_comment_confusable_pairs": "confusable_pairs -- pairs of signs that look visually similar to the model and can get mixed up (e.g. thankyou vs talk both start near the mouth/chin). For any pair listed here, the top prediction must beat the runner-up by confusable_margin or the frame is ignored as 'unclear' instead of wrongly confirmed. Add more pairs as needed: [['signA','signB'], ['signC','signD']].",
+
+  "_comment_confusable_margin": "confusable_margin -- minimum probability gap (0-1) required between top and second prediction for a confusable pair to be accepted. Higher = stricter, fewer mix-ups but more 'unclear, try again' moments. Lower = more lenient, may let mix-ups back in.",
+
+  "_comment_label_overrides": "label_overrides -- relabel a predicted sign to a different output word everywhere (on-screen text, voice, sentence buffer). Format is a list, one override per line: \"predicted_word\": \"output_word\". Example with several: {\"talk\": \"thankyou\", \"wake\": \"awake\", \"who\": \"hello\"} means talk shows as thankyou, wake shows as awake, who shows as hello. All OTHER signs not listed are unaffected and output normally as trained. A direct 'thankyou' prediction still outputs 'thankyou' as usual -- overrides don't chain. Set to {} to disable and use raw model output for every sign.",
+
+  "_comment_process_interval_ms": "NEW: How often (in milliseconds) the prediction loop runs. Lower = faster response but more CPU usage. Default 40 (25 FPS).",
+
+  "_comment_prefer_webgpu_onnx": "prefer_webgpu_onnx -- if true, ONNX inference tries WebGPU first and automatically falls back to WASM if it's unavailable or fails (this fallback is solid, both at startup and if it starts erroring mid-session). Default true.",
+
+  "_comment_prefer_gpu_mediapipe": "prefer_gpu_mediapipe -- if true, the hand/pose detectors try the GPU delegate first before falling back to CPU. Default FALSE on purpose: unlike the ONNX path, a broken GPU delegate can initialize successfully but then silently produce weak/empty landmarks on some hardware without ever throwing an error, so there's no reliable signal to auto-fall-back on. CPU delegate is slower but has proven reliable. Only flip this to true if you've verified GPU detection actually works well on your target hardware."
+}

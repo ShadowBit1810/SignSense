@@ -1,0 +1,13 @@
+{
+  "templates": [
+    {"words": ["please", "wait"], "sentence": "Please wait."},
+    {"words": ["go", "home"], "sentence": "Go home."},
+    {"words": ["please", "wake", "up"], "sentence": "Please wake up."},
+    {"words": ["thankyou"], "sentence": "Thank you very much"},
+    {"words": ["please", "make", "pizza", "mom"], "sentence": "Please make pizza for mom."},
+    {"words": ["please", "look", "up", "airplane"], "sentence": "Please look up at the airplane."},
+    {"words": ["please", "wait"], "sentence": "Please wait a moment."},
+    {"words": ["look", "up"], "sentence": "Look up at the sky."},
+    {"words": ["hello", "who"], "sentence": "Hello, Who are you"}
+  ]
+}

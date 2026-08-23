@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080c12">
+  <title>ASL Recognition | Sign → Word Wiz</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080c12;
+      --panel: #101722;
+      --panel-hover: #151f2c;
+      --line: #263447;
+      --text: #eef4fa;
+      --muted: #94a3b8;
+      --accent: #55d6be;
+      --accent-soft: rgba(85, 214, 190, 0.12);
+      --warning: #f0b429;
+      --danger: #f0576a;
+      --danger-soft: rgba(240, 87, 106, 0.13);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(85,214,190,.09), transparent 32%),
+        radial-gradient(circle at 90% 90%, rgba(85,214,190,.05), transparent 28%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button,
+    a {
+      font: inherit;
+    }
+
+    /* ---------- Top navigation ---------- */
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+
+      padding: 12px 20px;
+
+      background: rgba(8, 12, 18, 0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      flex: 0 0 auto;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 10px;
+      border: 1px solid rgba(85,214,190,.28);
+      background: var(--accent-soft);
+      color: var(--accent);
+
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .brand-text strong {
+      display: block;
+      font-size: .94rem;
+      line-height: 1.15;
+    }
+
+    .brand-text span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: .7rem;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+
+      min-height: 36px;
+      padding: 8px 12px;
+
+      border: 1px solid var(--line);
+      border-radius: 9px;
+
+      background: var(--panel);
+      color: var(--text);
+      text-decoration: none;
+
+      font-size: .8rem;
+      font-weight: 650;
+
+      transition:
+        background .16s ease,
+        border-color .16s ease,
+        transform .16s ease;
+    }
+
+    .nav-button:hover {
+      background: var(--panel-hover);
+      border-color: rgba(85,214,190,.4);
+      transform: translateY(-1px);
+    }
+
+    .nav-button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #06110d;
+    }
+
+    /* ---------- Error banner ---------- */
+
+    .error-banner {
+      display: none;
+      align-items: flex-start;
+      gap: 12px;
+
+      margin: 14px 20px 0;
+      padding: 14px 16px;
+
+      border: 1px solid rgba(240,87,106,.4);
+      border-radius: 12px;
+
+      background: var(--danger-soft);
+    }
+
+    .error-banner.show {
+      display: flex;
+    }
+
+    .error-icon {
+      flex: 0 0 auto;
+      font-size: 18px;
+    }
+
+    .error-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .error-title {
+      margin-bottom: 3px;
+      font-size: .9rem;
+      font-weight: 750;
+    }
+
+    .error-detail {
+      color: var(--muted);
+      font-size: .82rem;
+      line-height: 1.5;
+    }
+
+    .error-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .error-actions button {
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(240,87,106,.45);
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-size: .8rem;
+      font-weight: 700;
+    }
+
+    .error-actions .dismiss {
+      border-color: var(--line);
+      color: var(--muted);
+    }
+
+    /* ---------- Main ---------- */
+
+    .page {
+      width: min(1100px, 100%);
+      margin: 0 auto;
+      padding: 24px 20px 50px;
+    }
+
+    .page-heading {
+      margin-bottom: 20px;
+    }
+
+    .page-heading h1 {
+      margin: 0 0 5px;
+      font-size: 1.55rem;
+      letter-spacing: -.025em;
+    }
+
+    .page-heading p {
+      margin: 0;
+      max-width: 70ch;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.55;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* ---------- Camera area ---------- */
+
+    .camera-card {
+      min-width: 0;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+
+      overflow: hidden;
+
+      border: 1px solid var(--line);
+      border-radius: 16px;
+
+      background: #000;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+
+    #video,
+    #overlay {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .camera-placeholder {
+      position: absolute;
+      inset: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 24px;
+      text-align: center;
+
+      background:
+        radial-gradient(circle at center, rgba(85,214,190,.06), transparent 48%),
+        #05070b;
+
+      color: var(--muted);
+    }
+
+    .camera-placeholder-inner {
+      max-width: 330px;
+    }
+
+    .camera-placeholder-icon {
+      width: 58px;
+      height: 58px;
+      margin: 0 auto 13px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+
+      font-size: 1.35rem;
+    }
+
+    .camera-placeholder strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .camera-placeholder p {
+      margin: 0;
+      font-size: .82rem;
+      line-height: 1.55;
+    }
+
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 11px;
+
+      padding: 20px;
+      text-align: center;
+
+      background: rgba(8,12,18,.92);
+    }
+
+    .loading-overlay.hidden {
+      display: none;
+    }
+
+    .spinner {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 3px solid rgba(85,214,190,.2);
+      border-top-color: var(--accent);
+      animation: spin .9s linear infinite;
+    }
+
+    .loading-step {
+      color: var(--muted);
+      font-size: .84rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .camera-status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+
+      margin-top: 10px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+
+      padding: 6px 11px;
+
+      border: 1px solid var(--line);
+      border-radius: 999px;
+
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 750;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .status-pill.on {
+      color: var(--accent);
+      border-color: rgba(85,214,190,.35);
+      background: var(--accent-soft);
+    }
+
+    .status-pill.error {
+      color: var(--danger);
+      border-color: rgba(240,87,106,.35);
+      background: var(--danger-soft);
+    }
+
+    .sign-count {
+      color: var(--muted);
+      font-size: .75rem;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .control-button {
+      min-height: 44px;
+
+      padding: 10px 14px;
+
+      border: 1px solid var(--line);
+      border-radius: 10px;
+
+      background: var(--panel);
+      color: var(--text);
+
+      cursor: pointer;
+
+      font-size: .84rem;
+      font-weight: 750;
+
+      transition:
+        background .15s ease,
+        border-color .15s ease,
+        transform .15s ease;
+    }
+
+    .control-button:hover:not(:disabled) {
+      background: var(--panel-hover);
+      border-color: rgba(85,214,190,.35);
+      transform: translateY(-1px);
+    }
+
+    .control-button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .control-button.start {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #06110d;
+    }
+
+    .control-button.stop {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #180508;
+    }
+
+    /* ---------- Results panel ---------- */
+
+    .results-card {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+
+      padding: 18px 20px;
+
+      border: 1px solid var(--line);
+      border-radius: 16px;
+
+      background: var(--panel);
+    }
+
+    .result-block label {
+      display: block;
+      margin-bottom: 7px;
+
+      color: var(--muted);
+
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .current-sign {
+      min-height: 22px;
+      color: var(--text);
+      font-size: .95rem;
+    }
+
+    .current-sign.empty {
+      color: var(--muted);
+    }
+
+    .word-buffer {
+      min-height: 22px;
+      color: var(--warning);
+      font-size: .92rem;
+      font-weight: 650;
+    }
+
+    .sentence-box {
+      min-height: 74px;
+
+      display: flex;
+      align-items: center;
+
+      padding: 14px;
+
+      border: 1px solid var(--line);
+      border-radius: 11px;
+
+      background: rgba(0,0,0,.2);
+
+      color: var(--accent);
+      font-size: 1.05rem;
+      font-weight: 750;
+      line-height: 1.45;
+    }
+
+    .sentence-box.empty {
+      color: var(--muted);
+      font-size: .84rem;
+      font-weight: 400;
+    }
+
+    .results-divider {
+      height: 1px;
+      background: var(--line);
+    }
+
+    /* ---------- Technical log ---------- */
+
+    .log {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(0,0,0,.16);
+      overflow: hidden;
+    }
+
+    .log summary {
+      padding: 10px 12px;
+      cursor: pointer;
+
+      color: var(--muted);
+
+      font-size: .76rem;
+      font-weight: 650;
+      user-select: none;
+    }
+
+    .log-content {
+      padding: 0 12px 12px;
+
+      max-height: 170px;
+      overflow-y: auto;
+
+      color: var(--muted);
+      white-space: pre-wrap;
+
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .72rem;
+      line-height: 1.55;
+    }
+
+    /* ---------- Footer ---------- */
+
+    .note {
+      width: min(1100px, 100%);
+      margin: 0 auto;
+      padding: 0 20px 30px;
+
+      color: var(--muted);
+      font-size: .74rem;
+      text-align: center;
+    }
+
+    @media (max-width: 860px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .topbar,
+      .page,
+      .note {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .top-actions .word-wiz {
+        display: none;
+      }
+
+      .page {
+        padding-top: 18px;
+      }
+
+      .controls {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .control-button {
+        padding-inline: 10px;
+        font-size: .79rem;
+      }
+
+      .stage {
+        border-radius: 12px;
+      }
+
+      .results-card {
+        padding: 15px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ==================== TOP BAR ==================== -->
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo">S→W</div>
+
+      <div class="brand-text">
+        <strong>ASL Recognition</strong>
+        <span>Sign → Word Wiz</span>
+      </div>
+    </div>
+
+    <nav class="top-actions" aria-label="Page navigation">
+      <a class="nav-button" href="./launcher.html">
+        ← Menu
+      </a>
+
+      <a
+        class="nav-button primary word-wiz"
+        href="https://sign-to-word-wiz.lovable.app"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Word Wiz ↗
+      </a>
+    </nav>
+  </header>
+
+
+  <!-- ==================== ERROR BANNER ==================== -->
+
+  <section
+    id="errorBanner"
+    class="error-banner"
+    role="alert"
+    aria-live="polite"
+  >
+    <div class="error-icon">⚠️</div>
+
+    <div class="error-content">
+      <div id="errorTitle" class="error-title">
+        Something went wrong
+      </div>
+
+      <div id="errorDetail" class="error-detail">
+        An unexpected problem occurred.
+      </div>
+
+      <div class="error-actions">
+        <button id="errorRetryBtn" type="button">
+          Try again
+        </button>
+
+        <button id="errorDismissBtn" type="button" class="dismiss">
+          Dismiss
+        </button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+
+  <main class="page">
+
+    <section class="page-heading">
+      <h1>Live ASL Recognition</h1>
+
+      <p>
+        Sign naturally in front of your webcam.
+        The recognition engine will eventually identify signs,
+        build words, and produce sentence output.
+      </p>
+    </section>
+
+
+    <section class="workspace">
+
+      <!-- ==================== CAMERA ==================== -->
+
+      <section class="camera-card" aria-label="Camera recognition">
+
+        <div id="stage" class="stage">
+
+          <!-- Future JS will stream the webcam here. -->
+          <video
+            id="video"
+            autoplay
+            muted
+            playsinline
+            aria-label="ASL recognition camera"
+          ></video>
+
+          <!-- Future JS can draw hand/pose landmarks here. -->
+          <canvas id="overlay" aria-hidden="true"></canvas>
+
+
+          <!-- Initial camera placeholder -->
+          <div id="cameraPlaceholder" class="camera-placeholder">
+            <div class="camera-placeholder-inner">
+
+              <div class="camera-placeholder-icon">
+                ✋
+              </div>
+
+              <strong>
+                Camera is ready
+              </strong>
+
+              <p>
+                Press <b>Start Recognition</b> to begin.
+                Camera access and model loading will be connected by JavaScript later.
+              </p>
+
+            </div>
+          </div>
+
+
+          <!-- Future model-loading state -->
+          <div id="loadingOverlay" class="loading-overlay hidden">
+
+            <div class="spinner"></div>
+
+            <div id="loadingStep" class="loading-step">
+              Preparing recognition…
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Camera status -->
+
+        <div class="camera-status">
+
+          <div id="status" class="status-pill">
+            <span class="status-dot"></span>
+            <span id="statusText">PAUSED — click Start</span>
+          </div>
+
+          <div id="signCount" class="sign-count">
+            0 signs detected
+          </div>
+
+        </div>
+
+
+        <!-- Controls -->
+
+        <div id="controls" class="controls">
+
+          <button
+            id="startBtn"
+            class="control-button start"
+            type="button"
+            disabled
+          >
+            Start Recognition
+          </button>
+
+          <button
+            id="stopBtn"
+            class="control-button stop"
+            type="button"
+            disabled
+          >
+            Pause Recognition
+          </button>
+
+          <button
+            id="cameraBtn"
+            class="control-button"
+            type="button"
+            disabled
+          >
+            Camera Off
+          </button>
+
+          <button
+            id="clearBtn"
+            class="control-button"
+            type="button"
+            disabled
+          >
+            Clear Buffer
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- ==================== RESULTS ==================== -->
+
+      <aside class="results-card" aria-label="Recognition results">
+
+        <section class="result-block">
+          <label for="signLine">Current sign</label>
+
+          <div id="signLine" class="current-sign empty">
+            Nothing detected yet.
+          </div>
+        </section>
+
+
+        <section class="result-block">
+          <label for="wordsLine">Word buffer</label>
+
+          <div id="wordsLine" class="word-buffer">
+            Words: (empty)
+          </div>
+        </section>
+
+
+        <div class="results-divider"></div>
+
+
+        <section class="result-block">
+          <label for="sentenceBox">Sentence output</label>
+
+          <div
+            id="sentenceBox"
+            class="sentence-box empty"
+            aria-live="polite"
+          >
+            Sentence appears here.
+          </div>
+        </section>
+
+
+        <div class="results-divider"></div>
+
+
+        <!-- Technical information for later debugging -->
+
+        <details id="logDetails" class="log">
+
+          <summary>
+            Show technical log
+          </summary>
+
+          <div id="loadLog" class="log-content">
+            HTML interface loaded.
+            Waiting for JavaScript recognition engine.
+          </div>
+
+        </details>
+
+      </aside>
+
+    </section>
+
+  </main>
+
+
+  <!-- ==================== FOOTER ==================== -->
+
+  <footer class="note">
+    Local interface for the ASL Recognition tool.
+    Recognition logic, camera access, model loading, and speech output will be added in <code>app.js</code>.
+  </footer>
+
+
+  <!--
+    JavaScript comes next.
+
+    Keep this as the final script for now.
+    The future app.js can use the IDs already defined above.
+  -->
+  <script type="module" src="./app.js"></script>
+
+</body>
+</html>
