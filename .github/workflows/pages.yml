@@ -1,40 +1,45 @@
 name: Deploy Sign-Word-Wiz
-
 on:
   push:
     branches: ["main"]
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 jobs:
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Prepare website
         run: |
-          mkdir public
-          cp -r Sign-Word-Wiz/* public/
-
+          mkdir -p public/app
+          cp -r Sign-Word-Wiz/* public/app/
+          cat > public/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta http-equiv="refresh" content="0; url=app/launcher.html">
+              <link rel="canonical" href="app/launcher.html">
+              <title>Redirecting…</title>
+            </head>
+            <body>
+              <p>Redirecting to <a href="app/launcher.html">launcher.html</a>…</p>
+            </body>
+          </html>
+          EOF
       - name: Setup Pages
         uses: actions/configure-pages@v5
-
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./public
-
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
